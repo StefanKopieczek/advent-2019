@@ -2,12 +2,19 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include "adventfiles.h"
 
 #define INPUT "./inputs/1.txt"
 
 int calculateFuel(char *, bool);
+void handleLine(char *line, void *context);
 int weightToFuel(int);
 int weightToFuelRecursive(int);
+
+typedef struct {
+    int totalWeight;
+    bool isRecursive;
+} state;
 
 int main(int argc, char **argv) {
     int fuelNeededNaive = calculateFuel(INPUT, false);
@@ -18,25 +25,18 @@ int main(int argc, char **argv) {
 }
 
 int calculateFuel(char *filename, bool recursive) {
-    FILE *input = fopen(filename, "r");
-    char line[100];
-    int total = 0;
-    while (1) {
-        char *s = fgets(line, 100, input);
-        if (s == 0) {
-            break;
-        }
+    state s = {0, recursive};
+    advProcessFile(filename, &handleLine, &s);
+    return s.totalWeight;
+}
 
-        int moduleWeight = atoi(strtok(line, "\n"));
-        if (recursive) {
-            total += weightToFuelRecursive(moduleWeight);
-        } else {
-            total += weightToFuel(moduleWeight);
-        }
+void handleLine(char *line, void *context) {
+    state *s = (state *)context;
+    if (s->isRecursive) {
+        s->totalWeight += weightToFuelRecursive(atoi(line));
+    } else {
+        s->totalWeight += weightToFuel(atoi(line));
     }
-
-    fclose(input);
-    return total;
 }
 
 int weightToFuel(int moduleWeight) {
