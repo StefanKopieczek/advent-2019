@@ -26,16 +26,17 @@ int main(int argc, char **argv) {
 
 int calculateFuel(char *filename, bool recursive) {
     state s = {0, recursive};
-    advProcessFile(filename, &handleLine, &s);
+    adv_forLineInFile(filename, &handleLine, &s);
     return s.totalWeight;
 }
 
 void handleLine(char *line, void *context) {
     state *s = (state *)context;
+    int moduleWeight = atoi(line);
     if (s->isRecursive) {
-        s->totalWeight += weightToFuelRecursive(atoi(line));
+        s->totalWeight += weightToFuelRecursive(moduleWeight);
     } else {
-        s->totalWeight += weightToFuel(atoi(line));
+        s->totalWeight += weightToFuel(moduleWeight);
     }
 }
 
@@ -50,6 +51,5 @@ int weightToFuelRecursive(int moduleWeight) {
         total += newWeight;
         newWeight = weightToFuel(newWeight);
     }
-
     return total;
 }

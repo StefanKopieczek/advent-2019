@@ -1,6 +1,6 @@
 #include "adventfiles.h"
 
-void advProcessFile(char *path, adv_line_handler handleLine, void *context) {
+void adv_forLineInFile(char *path, adv_line_handler handleLine, void *context) {
     FILE *f = fopen(path, "r");
     char line[10000];
     while (1) {

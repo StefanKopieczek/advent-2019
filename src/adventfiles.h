@@ -4,4 +4,4 @@
 
 typedef void (*adv_line_handler) (char *line, void *context);
 
-void advProcessFile(char *path, adv_line_handler handleLine, void *context);
+void adv_forLineInFile(char *path, adv_line_handler handleLine, void *context);
