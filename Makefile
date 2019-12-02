@@ -2,7 +2,7 @@ SRC = src
 OUTPUT = build
 
 build/%: $(SRC)/%.c
-	gcc -o $@ $< $(SRC)/adventfiles.c -I $(SRC)
+	gcc -g -std=c99 -o $@ $< $(SRC)/adventfiles.c -I $(SRC)
 
 .PHONY: clean
 clean:
