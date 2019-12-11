@@ -1,7 +1,10 @@
 SRC = src
 OUTPUT = build
 
-build/%: $(SRC)/%.c
+build:
+	mkdir build
+
+build/%: $(SRC)/%.c build
 	gcc -g -std=c99 -o $@ $< $(SRC)/adventfiles.c -I $(SRC)
 
 .PHONY: clean
