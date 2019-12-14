@@ -9,7 +9,7 @@ build/%: $(SRC)/%.c build
 
 .PHONY: clean
 clean:
-	rm $(OUTPUT)/*
+	rm -rf $(OUTPUT)/*
 
 run%:
 	$(MAKE) $(OUTPUT)/$*

@@ -15,6 +15,7 @@ typedef struct {
 typedef struct {
     int x;
     int y;
+    int signalDistance;
 } Coord;
 
 typedef struct {
@@ -121,12 +122,13 @@ Coord move(Coord start, Direction direction) {
             break;
     }
 
+    result.signalDistance++;
     return result;
 }
 
 CoordList *get_wire_coords(MoveList *moveList) {
     CoordList *coordList = coord_list_init();
-    Coord current = { 0, 0 };
+    Coord current = { 0, 0, 0 };
     for (int idx = 0; idx < moveList->count; idx++) {
         Move currentMove = moveList->moves[idx];
         for (int step = 0; step < currentMove.distance; step++) {
@@ -138,7 +140,23 @@ CoordList *get_wire_coords(MoveList *moveList) {
     return coordList;
 }
 
-int cmp_coord(const void* coord1, const void* coord2) {
+int cmp_coord_incl_distance(const void* coord1, const void* coord2) {
+    const Coord *a = (const Coord*) coord1;
+    const Coord *b = (const Coord*) coord2;
+    if (a->x < b->x) {
+        return -1;
+    } else if (a->x > b->x) {
+        return 1;
+    } else if (a->y < b->y) {
+        return -1;
+    } else if (a->y > b->y) {
+        return 1;
+    } else {
+        return a->signalDistance - b->signalDistance;
+    }
+}
+
+int cmp_coord_without_distance(const void* coord1, const void* coord2) {
     const Coord *a = (const Coord*) coord1;
     const Coord *b = (const Coord*) coord2;
     if (a->x < b->x) {
@@ -151,7 +169,7 @@ int cmp_coord(const void* coord1, const void* coord2) {
 }
 
 void sort_coord_list(CoordList *coords) {
-    qsort(coords->coords, coords->count, sizeof(Coord), &cmp_coord);
+    qsort(coords->coords, coords->count, sizeof(Coord), &cmp_coord_incl_distance);
 }
 
 CoordList *get_intersections(CoordList *wireOne, CoordList *wireTwo) {
@@ -164,13 +182,15 @@ CoordList *get_intersections(CoordList *wireOne, CoordList *wireTwo) {
     int wireOneIdx = 0;
     int wireTwoIdx = 0;
     while (wireOneIdx < wireOne->count && wireTwoIdx < wireTwo->count) {
-        int cmp = cmp_coord(&wireOne->coords[wireOneIdx], &wireTwo->coords[wireTwoIdx]);
+        int cmp = cmp_coord_without_distance(&wireOne->coords[wireOneIdx], &wireTwo->coords[wireTwoIdx]);
         if (cmp < 0) {
             wireOneIdx++;
         } else if (cmp > 0) {
             wireTwoIdx++;
         } else {
-            coord_list_add(intersections, &wireOne->coords[wireOneIdx]);
+            Coord intersection = wireOne->coords[wireOneIdx];
+            intersection.signalDistance += wireTwo->coords[wireTwoIdx].signalDistance;
+            coord_list_add(intersections, &intersection);
             wireOneIdx++;
             wireTwoIdx++;
         }
@@ -186,6 +206,19 @@ int get_distance_to_closest_to_origin(CoordList *coordList) {
         int distance = abs(c->x) + abs(c->y);
         if (bestDistance == -1 || distance < bestDistance) {
             bestDistance = distance;
+        }
+    }
+
+    return bestDistance;
+}
+
+int get_minimal_signal_distance(CoordList *coordList) {
+    int bestDistance = -1;
+
+    for (int idx = 0; idx < coordList->count; idx++ ) {
+        Coord *c = &coordList->coords[idx];
+        if (bestDistance == -1 || c->signalDistance < bestDistance) {
+            bestDistance = c->signalDistance;
         }
     }
 
@@ -212,6 +245,9 @@ int main(int argv, char **argc) {
 
     int bestDistance = get_distance_to_closest_to_origin(intersections);
     printf("The closest coordinate to the origin is %d away.\n", bestDistance);
+
+    int bestSignalDistance = get_minimal_signal_distance(intersections);
+    printf("The minimal signal distance is %d.\n", bestSignalDistance);
     coord_list_free(intersections);
 
     return 0;
