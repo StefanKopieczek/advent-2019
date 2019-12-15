@@ -24,6 +24,10 @@ typedef enum {
     MULTIPLY = 2,
     INPUT = 3,
     OUTPUT = 4,
+    JUMP_IF_TRUE = 5,
+    JUMP_IF_FALSE = 6,
+    LESS_THAN = 7,
+    EQUALS = 8,
     HALT = 99
 } Opcode;
 
@@ -50,6 +54,10 @@ void do_add(State *, Instruction);
 void do_multiply(State *, Instruction);
 void do_input(State *, Instruction);
 void do_output(State *, Instruction);
+void do_jump_if_true(State *, Instruction);
+void do_jump_if_false(State *, Instruction);
+void do_less_than(State *, Instruction);
+void do_equals(State *, Instruction);
 void do_halt(State *, Instruction);
 void update_or_error(State *state, int dest, int value);
 void tick(State *);

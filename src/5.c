@@ -53,6 +53,18 @@ void tick(State *state) {
         case OUTPUT:
             do_output(state, instr);
             break;
+        case JUMP_IF_TRUE:
+            do_jump_if_true(state, instr);
+            break;
+        case JUMP_IF_FALSE:
+            do_jump_if_false(state, instr);
+            break;
+        case LESS_THAN:
+            do_less_than(state, instr);
+            break;
+        case EQUALS:
+            do_equals(state, instr);
+            break;
         case HALT:
             do_halt(state, instr);
             break;
@@ -103,6 +115,38 @@ void do_input(State *state, Instruction instr) {
 void do_output(State *state, Instruction instr) {
     int value = load_parameter(state, instr, 1);
     printf("Program outputted a value: %d\n", value);
+}
+
+void do_jump_if_true(State *state, Instruction instr) {
+    int conditional = load_parameter(state, instr, 1);
+    int new_ptr = load_parameter(state, instr, 2);
+    if (conditional != 0) {
+        state->ptr = new_ptr;
+    }
+}
+
+void do_jump_if_false(State *state, Instruction instr) {
+    int conditional = load_parameter(state, instr, 1);
+    int new_ptr = load_parameter(state, instr, 2);
+    if (conditional == 0) {
+        state->ptr = new_ptr;
+    }
+}
+
+void do_less_than(State *state, Instruction instr) {
+    int a = load_parameter(state, instr, 1);
+    int b = load_parameter(state, instr, 2);
+    int dst = load_destination(state, instr, 3);
+    int result = (a < b) ? 1 : 0;
+    update_or_error(state, dst, result);
+}
+
+void do_equals(State *state, Instruction instr) {
+    int a = load_parameter(state, instr, 1);
+    int b = load_parameter(state, instr, 2);
+    int dst = load_destination(state, instr, 3);
+    int result = (a == b) ? 1 : 0;
+    update_or_error(state, dst, result);
 }
 
 void do_halt(State *state, Instruction instr) {
