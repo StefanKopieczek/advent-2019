@@ -37,7 +37,7 @@ OrbitList *orbit_list_init();
 void orbit_list_free(OrbitList *);
 void orbit_list_add(OrbitList *orbits, Label primary, Label satellite);
 OrbitList *orbit_list_parse(FILE *);
-
+void populate_directory(Directory *directory, OrbitList *orbits);
 // Adjacency matrix where graph[a][b] is true iff b is a direct satellite of a.
 typedef struct {
     bool **nodes;
@@ -48,7 +48,7 @@ OrbitGraph *graph_init(int numObjects);
 void graph_free(OrbitGraph *);
 void graph_add_orbit(OrbitGraph *graph, int primary, int satellite);
 bool graph_has_orbit(OrbitGraph *graph, int primary, int satellite);
-OrbitGraph *graph_from_list(OrbitList *);
+OrbitGraph *graph_from_list(OrbitList *, Directory *directory);
 
 typedef struct {
     int indirectSatellites;
@@ -56,3 +56,7 @@ typedef struct {
 } OrbitCountResult;
 
 void count_child_orbits(OrbitCountResult *output, OrbitGraph *graph, int node);
+
+int *get_parents(OrbitGraph *graph);
+void recursively_add_children_to_parent_map(OrbitGraph *graph, int *parentMap, int current);
+int get_orbital_distance(OrbitGraph *graph, int start, int end);
