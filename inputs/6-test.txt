@@ -1,0 +1,11 @@
+COM)aaB
+aaB)aaC
+aaC)aaD
+aaD)aaE
+aaE)aaF
+aaB)aaG
+aaG)aaH
+aaD)aaI
+aaE)aaJ
+aaJ)aaK
+aaK)aaL
