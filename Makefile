@@ -5,7 +5,7 @@ build:
 	mkdir build
 
 build/%: $(SRC)/%.c build
-	gcc -g -std=c99 -o $@ $< $(SRC)/adventfiles.c -I $(SRC)
+	gcc -Wall -g -std=c99 -o $@ $< $(SRC)/adventfiles.c -I $(SRC)
 
 .PHONY: clean
 clean:
