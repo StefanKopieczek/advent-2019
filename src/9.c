@@ -72,6 +72,9 @@ void tick(State *state) {
         case EQUALS:
             do_equals(state, instr);
             break;
+        case ADJUST_RELATIVE_BASE:
+            do_adjust_relative_base(state, instr);
+            break;
         case HALT:
             do_halt(state, instr);
             break;
@@ -173,6 +176,15 @@ void do_equals(State *state, Instruction instr) {
     update_or_error(state, dst, result);
 }
 
+void do_adjust_relative_base(State *state, Instruction instr) {
+    debug("\tDoing ADJ_REL_BASE.\n");
+    long long offset = load_parameter(state, instr, 1);
+    long long oldBase = state->relativeBase;
+    (void)oldBase;
+    state->relativeBase += offset;
+    debug("\t\tWas %lld, adjust by %lld, now %lld.\n", oldBase, offset, state->relativeBase);
+}
+
 void do_halt(State *state, Instruction instr) {
     debug("\tDoing HALT.\n");
     state->status = COMPLETE;
@@ -188,6 +200,9 @@ long long load_parameter(State *state, Instruction instr, int paramIdx) {
         case IMMEDIATE:
             // In IMMEDIATE mode, the tape value is a literal.
             return rawParam;
+        case RELATIVE:
+            // RELATIVE mode works like position, but the tape value is summed with the relative base to obtain a pointer to the parameter.
+            return tape_get(state->tape, state->relativeBase+rawParam);
         default:
             fprintf(stderr, "ERROR: Unknown address mode %d.\n", addressMode);
             state->status = ERROR;
@@ -198,11 +213,21 @@ long long load_parameter(State *state, Instruction instr, int paramIdx) {
 long long load_destination(State *state, Instruction instr, int paramIdx) {
     long long destination = read_next_value(state);
     AddressMode addressMode = get_parameter_address_mode(instr, paramIdx);
-    if (addressMode != POSITION) {
-        fprintf(stderr, "ERROR: A destination parameter had invalid address mode %d."
-                        " Destinations must have POSITION mode.\n", addressMode);
-        state->status = ERROR;
+
+    switch (addressMode) {
+        case POSITION:
+            break;
+        case IMMEDIATE:
+            fprintf(stderr, "ERROR: A destination parameter had invalid address mode IMMEDIATE.\n");
+            state->status = ERROR;
+            break;
+        case RELATIVE:
+            destination += state->relativeBase;
+            break;
+        default:
+            fprintf(stderr, "ERROR: Unknown address mode %d.\n", addressMode);
     }
+
     return destination;
 }
 

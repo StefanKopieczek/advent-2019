@@ -31,6 +31,7 @@ typedef enum {
     JUMP_IF_FALSE = 6,
     LESS_THAN = 7,
     EQUALS = 8,
+    ADJUST_RELATIVE_BASE = 9,
     HALT = 99
 } Opcode;
 
@@ -42,7 +43,7 @@ typedef enum { RUNNING, COMPLETE, ERROR } Status;
 typedef struct {
     Tape *tape;
     long long ptr;
-    int relativeBase;
+    long long relativeBase;
     Status status;
 } State;
 
@@ -62,6 +63,7 @@ void do_jump_if_true(State *, Instruction);
 void do_jump_if_false(State *, Instruction);
 void do_less_than(State *, Instruction);
 void do_equals(State *, Instruction);
+void do_adjust_relative_base(State *, Instruction);
 void do_halt(State *, Instruction);
 void update_or_error(State *state, long long dest, long long value);
 void tick(State *);
