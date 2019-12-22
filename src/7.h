@@ -78,8 +78,9 @@ void do_equals(State *, Instruction);
 void do_halt(State *, Instruction);
 void update_or_error(State *state, int dest, int value);
 void tick(State *);
-int run_until_output(State *);
+void run_until_output(State *);
 
 int get_thruster_signal(int* phaseSettings);
+int get_thruster_signal_feedback(int* phaseSettings);
 bool phase_settings_are_valid(int* phaseSettings);
 bool increment_phase_settings(int* phaseSettings);

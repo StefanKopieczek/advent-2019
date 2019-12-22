@@ -18,16 +18,23 @@ int main(int argc, char **argv) {
     }
 
     int bestOutput = -1;
+    int bestFeedbackOutput = -1;
     while (increment_phase_settings(phaseSettings)) {
         if (phase_settings_are_valid(phaseSettings)) {
             int thrusterSignal = get_thruster_signal(phaseSettings);
             if (thrusterSignal > bestOutput) {
                 bestOutput = thrusterSignal;
             }
+
+            int feedbackSignal = get_thruster_signal_feedback(phaseSettings);
+            if (feedbackSignal > bestFeedbackOutput) {
+                bestFeedbackOutput = feedbackSignal;
+            }
         }
     }
 
     printf("The best possible thruster output is %d.\n", bestOutput);
+    printf("...but with feedback, it's %d.\n", bestFeedbackOutput);
 }
 
 bool increment_phase_settings(int *settings) {
@@ -65,7 +72,12 @@ int get_thruster_signal(int *phaseSettings) {
         states[i] = state_init(tapes[i]);
         queue_append(states[i]->input, phaseSettings[i]);
         queue_append(states[i]->input, last_output);
-        last_output = run_until_output(states[i]);
+        run_until_output(states[i]);
+        if (queue_is_empty(states[i]->output)) {
+            fprintf(stderr, "Amplifier %d exited without output.\n", i);
+        } else {
+            last_output = queue_retrieve(states[i]->output);
+        }
         state_free(states[i]);
         tape_free(tapes[i]);
     }
@@ -73,20 +85,50 @@ int get_thruster_signal(int *phaseSettings) {
     return last_output;
 }
 
-int run_until_output(State *state) {
+int get_thruster_signal_feedback(int *phaseSettings) {
+    Tape *tapes[NUM_AMPLIFIERS];
+    State *states[NUM_AMPLIFIERS];
+    int last_output = 0;
+    int last_system_output = 0;
+    int i = 0;
+
+    for (int i = 0; i < NUM_AMPLIFIERS; i++) {
+        tapes[i] = load_from_path(TAPE_PATH);
+        states[i] = state_init(tapes[i]);
+        queue_append(states[i]->input, phaseSettings[i] + NUM_AMPLIFIERS);
+    }
+
+    while (1) {
+        queue_append(states[i]->input, last_output);
+        run_until_output(states[i]);
+        if (queue_is_empty(states[i]->output)) {
+            break;
+        } else {
+            last_output = queue_retrieve(states[i]->output);
+            if (i == NUM_AMPLIFIERS - 1) {
+                last_system_output = last_output;
+            }
+        }
+
+        i = (i + 1) % NUM_AMPLIFIERS;
+    }
+
+    for (int i = 0; i < NUM_AMPLIFIERS; i++) {
+        state_free(states[i]);
+        tape_free(tapes[i]);
+    }
+
+    return last_system_output;
+}
+
+void run_until_output(State *state) {
     while(is_running(state) && queue_is_empty(state->output)) {
         tick(state);
     }
 
     if (state->status == ERROR) {
         fprintf(stderr, "ERROR: program %p exited with status ERROR.\n", state);
-        return -1;
-	} else if (queue_is_empty(state->output)) {
-        fprintf(stderr, "ERROR: program %p exited with no output.\n", state);
-        return -1;
-    } else {
-        return (queue_retrieve(state->output));
-    }
+	}
 }
 
 void tick(State *state) {
